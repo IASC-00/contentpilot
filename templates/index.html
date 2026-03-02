@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContentPilot — AI Social Media Scheduler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #fff; --bg-alt: #f7f5f2; --border: #e8e3db;
+  --text: #1c1c1c; --dim: #888; --font: 'Inter', system-ui, sans-serif;
+  --tw: #000; --tw-bg: #f0f0f0;
+  --ig: #c13584; --ig-bg: #fdf0fb;
+  --li: #0a66c2; --li-bg: #e8f2fb;
+}
+body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+.top-bar { background: var(--text); color: rgba(255,255,255,.6); text-align: center; padding: 9px 20px; font-size: 12px; }
+.top-bar a { color: #fff; font-weight: 600; text-decoration: none; }
+nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.94); border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); padding: 0 24px; height: 52px; display: flex; align-items: center; gap: 16px; }
+.nav-brand { font-size: 14px; font-weight: 700; text-decoration: none; color: var(--text); white-space: nowrap; }
+.nav-tabs { display: flex; gap: 4px; flex: 1; justify-content: center; }
+.tab-btn { padding: 6px 18px; border-radius: 6px; border: none; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--dim); transition: all .15s; }
+.tab-btn:hover { background: var(--bg-alt); color: var(--text); }
+.tab-btn.active { background: var(--text); color: #fff; }
+.nav-right { font-size: 13px; font-weight: 700; color: var(--dim); white-space: nowrap; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.page { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+.page-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--dim); margin-bottom: 8px; }
+.page-title { font-size: clamp(22px, 4vw, 32px); font-weight: 800; letter-spacing: -.03em; margin-bottom: 8px; }
+.page-desc { font-size: 14px; color: var(--dim); margin-bottom: 28px; }
+.form-group { margin-bottom: 20px; }
+label.field-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--dim); margin-bottom: 7px; }
+input[type=text], textarea, select { width: 100%; border: 1.5px solid var(--border); border-radius: 7px; padding: 10px 13px; font-family: var(--font); font-size: 14px; color: var(--text); background: var(--bg); outline: none; transition: border-color .15s; }
+input:focus, textarea:focus, select:focus { border-color: var(--text); }
+textarea { resize: vertical; min-height: 90px; }
+.tone-group { display: flex; gap: 16px; flex-wrap: wrap; }
+.tone-option { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.tone-option input[type=radio] { accent-color: var(--text); width: 15px; height: 15px; }
+.tone-label { font-size: 13.5px; font-weight: 500; }
+.kw-row { display: flex; gap: 8px; }
+.kw-row input { flex: 1; }
+.kw-add-btn { padding: 0 16px; border-radius: 7px; border: 1.5px solid var(--border); background: var(--bg-alt); font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: border-color .15s; }
+.kw-add-btn:hover { border-color: var(--text); }
+.kw-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.kw-pill { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 12.5px; display: flex; align-items: center; gap: 5px; }
+.kw-pill button { border: none; background: none; cursor: pointer; font-size: 15px; color: var(--dim); padding: 0; line-height: 1; }
+.btn { display: inline-block; padding: 10px 22px; border-radius: 7px; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: opacity .15s; text-decoration: none; }
+.btn-primary { background: var(--text); color: #fff; }
+.btn-primary:hover { opacity: .85; }
+.btn-secondary { background: var(--bg-alt); color: var(--text); border: 1.5px solid var(--border); }
+.btn-secondary:hover { border-color: var(--text); }
+.btn:disabled { opacity: .4; cursor: default; pointer-events: none; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.saved-banner { display: none; background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; margin-top: 16px; }
+.saved-banner.visible { display: block; }
+.niche-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
+@media (max-width: 600px) { .niche-grid { grid-template-columns: 1fr 1fr; } }
+.niche-card { border: 1.5px solid var(--border); border-radius: 9px; padding: 13px 14px; cursor: pointer; transition: all .15s; background: var(--bg); }
+.niche-card:hover { border-color: var(--text); background: var(--bg-alt); }
+.niche-card.active { border-color: var(--text); background: var(--text); color: #fff; }
+.niche-card.active .niche-examples { color: rgba(255,255,255,.6); }
+.niche-label { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.niche-examples { font-size: 11.5px; color: var(--dim); }
+.plat-rec { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; color: var(--dim); flex-wrap: wrap; }
+.plat-rec strong { color: var(--text); }
+.brand-mini { display: flex; align-items: center; gap: 14px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 28px; }
+.brand-mini-name { font-weight: 800; font-size: 15px; }
+.brand-mini-meta { font-size: 12.5px; color: var(--dim); }
+.brand-mini-edit { margin-left: auto; font-size: 12px; color: var(--dim); text-decoration: none; border-bottom: 1px solid var(--border); cursor: pointer; background: none; border-left: none; border-top: none; border-right: none; font-family: var(--font); padding: 0; }
+.brand-mini-edit:hover { color: var(--text); }
+.platform-checks { display: flex; gap: 14px; flex-wrap: wrap; }
+.plat-check { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.plat-check input { accent-color: var(--text); width: 16px; height: 16px; }
+.plat-badge { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 11px; font-weight: 800; }
+.plat-badge.twitter { background: #000; color: #fff; }
+.plat-badge.instagram { background: var(--ig); color: #fff; }
+.plat-badge.linkedin { background: var(--li); color: #fff; }
+.plat-desc { font-size: 12px; color: var(--dim); }
+.gen-results { margin-top: 28px; display: flex; flex-direction: column; gap: 16px; }
+.gen-card { border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+.gen-card-header { padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); background: var(--bg-alt); }
+.gen-card-header.twitter { border-left: 4px solid #000; }
+.gen-card-header.instagram { border-left: 4px solid var(--ig); }
+.gen-card-header.linkedin { border-left: 4px solid var(--li); }
+.gen-platform-name { font-size: 13px; font-weight: 700; }
+.gen-char-count { font-size: 12px; color: var(--dim); margin-left: auto; }
+.gen-char-count.over { color: #dc2626; font-weight: 700; }
+.gen-card-body { padding: 16px; }
+.gen-caption { font-size: 14px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
+.gen-actions { display: flex; gap: 8px; margin-top: 12px; }
+.alert { padding: 11px 15px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+.alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.cal-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.cal-status { font-size: 12.5px; color: var(--dim); font-style: italic; }
+.cal-legend { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+.cal-outer { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+.cal-grid { display: grid; grid-template-columns: 80px repeat(7, minmax(128px, 1fr)); min-width: 980px; }
+.cal-cell { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.cal-corner { background: var(--bg-alt); }
+.cal-day-header { background: var(--bg-alt); padding: 10px 12px; text-align: center; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
+.cal-plat-header { background: var(--bg-alt); padding: 10px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; display: flex; align-items: center; justify-content: center; }
+.cal-plat-header.twitter { color: #111; }
+.cal-plat-header.instagram { color: var(--ig); }
+.cal-plat-header.linkedin { color: var(--li); }
+.cal-post { padding: 10px 11px; cursor: pointer; transition: filter .1s; min-height: 88px; }
+.cal-post:hover { filter: brightness(.95); }
+.cal-post.twitter { background: var(--tw-bg); }
+.cal-post.instagram { background: var(--ig-bg); }
+.cal-post.linkedin { background: var(--li-bg); }
+.cal-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 5px; opacity: .65; }
+.cal-post.twitter .cal-type { color: #333; }
+.cal-post.instagram .cal-type { color: var(--ig); }
+.cal-post.linkedin .cal-type { color: var(--li); }
+.cal-preview { font-size: 11.5px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.cal-post.twitter .cal-preview { color: #111; }
+.cal-post.instagram .cal-preview { color: #5a1a50; }
+.cal-post.linkedin .cal-preview { color: #0a3875; }
+.cal-empty { background: var(--bg-alt); min-height: 88px; }
+.modal-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.45); align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: #fff; border-radius: 14px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; padding: 28px; }
+.modal-close { position: absolute; top: 14px; right: 14px; border: none; background: var(--bg-alt); border-radius: 6px; width: 30px; height: 30px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); }
+.modal-close:hover { background: var(--border); }
+.modal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.modal-day { font-size: 13px; color: var(--dim); }
+.modal-type-badge { margin-left: auto; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 4px; }
+.modal-caption { font-size: 14.5px; line-height: 1.8; white-space: pre-wrap; word-break: break-word; margin-bottom: 18px; border: 1px solid var(--border); border-radius: 8px; padding: 14px; background: var(--bg-alt); }
+.modal-footer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.modal-char { font-size: 12px; color: var(--dim); }
+.status-select { padding: 5px 10px; border-radius: 6px; border: 1.5px solid var(--border); font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; }
+@media (max-width: 600px) {
+  .tone-group { flex-direction: column; gap: 10px; }
+  .platform-checks { flex-direction: column; gap: 10px; }
+  .cal-controls { flex-direction: column; align-items: flex-start; }
+  .nav-right { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">ContentPilot Demo &mdash; AI social media scheduler &mdash; <a href="https://iswain.dev" target="_blank">iswain.dev</a></div>
+
+<nav>
+  <a class="nav-brand" href="https://iswain.dev">← iswain.dev</a>
+  <div class="nav-tabs">
+    <button class="tab-btn active" data-tab="brand">Brand</button>
+    <button class="tab-btn" data-tab="generate">Generate</button>
+    <button class="tab-btn" data-tab="calendar">Calendar</button>
+  </div>
+  <span class="nav-right">ContentPilot</span>
+</nav>
+
+<!-- ── BRAND TAB ── -->
+<div class="tab-pane active" id="tab-brand">
+<div class="page">
+  <div class="page-label">step 1</div>
+  <h1 class="page-title">Brand Profile</h1>
+  <p class="page-desc">Select your niche to get a pre-built content strategy, or fill in the form manually.</p>
+
+  <label class="field-label" style="margin-bottom:10px;">Quick Start — Choose Your Niche</label>
+  <div class="niche-grid" id="niche-grid"></div>
+
+  <form id="brand-form">
+    <div class="form-group">
+      <label class="field-label" for="bf-name">Brand Name</label>
+      <input type="text" id="bf-name" placeholder="Harbor Coffee Co." required>
+    </div>
+    <div class="form-group">
+      <label class="field-label" for="bf-industry">Industry / Type</label>
+      <input type="text" id="bf-industry" placeholder="specialty coffee shop">
+    </div>
+    <div class="form-group">
+      <label class="field-label">Brand Tone</label>
+      <div class="tone-group">
+        <label class="tone-option">
+          <input type="radio" name="tone" value="casual" checked>
+          <span class="tone-label">Casual <span style="color:var(--dim);font-size:12px">— friendly, warm</span></span>
+        </label>
+        <label class="tone-option">
+          <input type="radio" name="tone" value="professional">
+          <span class="tone-label">Professional <span style="color:var(--dim);font-size:12px">— polished, authoritative</span></span>
+        </label>
+        <label class="tone-option">
+          <input type="radio" name="tone" value="bold">
+          <span class="tone-label">Bold <span style="color:var(--dim);font-size:12px">— direct, attention-grabbing</span></span>
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="field-label" for="bf-audience">Target Audience</label>
+      <input type="text" id="bf-audience" placeholder="coffee lovers, young professionals, locals in Fells Point, Baltimore">
+    </div>
+    <div class="form-group">
+      <label class="field-label">Brand Keywords</label>
+      <div class="kw-row">
+        <input type="text" id="kw-input" placeholder="Add a keyword and press Enter" maxlength="40">
+        <button type="button" class="kw-add-btn" onclick="addKeyword()">Add</button>
+      </div>
+      <div class="kw-pills" id="kw-pills"></div>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Brand Profile</button>
+  </form>
+  <div class="saved-banner" id="brand-saved">Brand profile saved.</div>
+</div>
+</div>
+
+<!-- ── GENERATE TAB ── -->
+<div class="tab-pane" id="tab-generate">
+<div class="page">
+  <div class="page-label">step 2</div>
+  <h1 class="page-title">Generate Posts</h1>
+  <p class="page-desc">Describe what you want to post about. ContentPilot writes platform-optimized captions in your brand voice.</p>
+
+  <div class="plat-rec" id="plat-rec" style="display:none">
+    <strong>Recommended for your niche:</strong>
+    <span id="plat-rec-badges"></span>
+  </div>
+
+  <div class="brand-mini" id="gen-brand-mini">
+    <div>
+      <div class="brand-mini-name" id="gen-brand-name">—</div>
+      <div class="brand-mini-meta" id="gen-brand-meta">Set up your brand on the Brand tab first</div>
+    </div>
+    <button class="brand-mini-edit" onclick="switchTab('brand')">Edit brand →</button>
+  </div>
+
+  <div class="form-group">
+    <label class="field-label" for="topic">What do you want to post about?</label>
+    <textarea id="topic" placeholder="e.g. We just got a single-origin Ethiopian Yirgacheffe in — bright, floral, incredible for pour-overs."></textarea>
+  </div>
+  <div class="form-group">
+    <label class="field-label">Platforms</label>
+    <div class="platform-checks">
+      <label class="plat-check">
+        <input type="checkbox" name="platform" value="twitter" checked>
+        <span class="plat-badge twitter">𝕏</span>
+        <span>Twitter/X <span class="plat-desc">max 280 chars</span></span>
+      </label>
+      <label class="plat-check">
+        <input type="checkbox" name="platform" value="instagram" checked>
+        <span class="plat-badge instagram">IG</span>
+        <span>Instagram <span class="plat-desc">caption + hashtags</span></span>
+      </label>
+      <label class="plat-check">
+        <input type="checkbox" name="platform" value="linkedin" checked>
+        <span class="plat-badge linkedin">in</span>
+        <span>LinkedIn <span class="plat-desc">150–300 chars, professional</span></span>
+      </label>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="field-label" for="content-type">Content Type</label>
+    <select id="content-type">
+      <option value="general">General</option>
+      <option value="educational">Educational — tip or how-to</option>
+      <option value="product">Product — highlight or launch</option>
+      <option value="behind-the-scenes">Behind the Scenes</option>
+      <option value="engagement">Engagement — question or poll</option>
+      <option value="promotion">Promotion — offer or sale</option>
+      <option value="community">Community — spotlight or UGC</option>
+      <option value="inspiration">Inspiration — values or motivation</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" id="gen-btn" onclick="generatePosts()">Generate Posts</button>
+  <div class="gen-results" id="gen-results"></div>
+</div>
+</div>
+
+<!-- ── CALENDAR TAB ── -->
+<div class="tab-pane" id="tab-calendar">
+<div class="page" style="max-width:100%;">
+  <div style="max-width:860px;margin:0 auto;">
+    <div class="page-label">step 3</div>
+    <h1 class="page-title">7-Day Content Calendar</h1>
+    <p class="page-desc">Generate a full week of content across Twitter/X, Instagram, and LinkedIn. Click any cell to view and copy the full post.</p>
+    <div class="cal-controls">
+      <button class="btn btn-primary" id="gen-week-btn" onclick="generateWeek()">Generate Week</button>
+      <span class="cal-status" id="cal-status">Showing sample week — hit Generate Week for AI content tailored to your brand</span>
+    </div>
+    <div class="cal-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#555"></div> Twitter/X</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--ig)"></div> Instagram</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--li)"></div> LinkedIn</div>
+    </div>
+  </div>
+  <div style="padding:0 24px;">
+    <div class="cal-outer">
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleModalBg(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+var BRAND = {{ brand | tojson }};
+var POSTS = {{ posts | tojson }};
+var HAS_API_KEY = {{ 'true' if has_api_key else 'false' }};
+var NICHES = {{ niches | tojson }};
+var activeNiche = (BRAND && BRAND.niche) ? BRAND.niche : '';
+var keywords = (BRAND && BRAND.keywords) ? BRAND.keywords.slice() : ['specialty coffee','local','community','artisan','sustainable'];
+var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+var PLATFORMS = ['twitter','instagram','linkedin'];
+var PLAT_LABELS = {twitter:'Twitter/X', instagram:'Instagram', linkedin:'LinkedIn'};
+var TYPE_COLORS = {educational:'#dbeafe',product:'#fef3c7','behind-the-scenes':'#d1fae5',engagement:'#ede9fe',promotion:'#fee2e2',community:'#e0f2fe',inspiration:'#fde68a',general:'#f3f4f6'};
+var TYPE_TEXT = {educational:'#1e40af',product:'#92400e','behind-the-scenes':'#065f46',engagement:'#4c1d95',promotion:'#991b1b',community:'#0c4a6e',inspiration:'#78350f',general:'#374151'};
+
+document.addEventListener('DOMContentLoaded', function() {
+  renderNicheGrid();
+  loadBrandForm();
+  updateGenMini();
+  updatePlatRec();
+  renderCalendar(POSTS);
+  document.getElementById('kw-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); addKeyword(); }
+  });
+});
+
+// Niche grid
+function renderNicheGrid() {
+  var grid = document.getElementById('niche-grid');
+  var html = '';
+  Object.keys(NICHES).forEach(function(key) {
+    var n = NICHES[key];
+    var isActive = key === activeNiche;
+    html += '<div class="niche-card' + (isActive ? ' active' : '') + '" data-niche="' + key + '" onclick="selectNiche(\'' + key + '\')">';
+    html += '<div class="niche-label">' + n.label + '</div>';
+    html += '<div class="niche-examples">' + n.examples + '</div>';
+    html += '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+function selectNiche(key) {
+  activeNiche = key;
+  // Update card highlight
+  document.querySelectorAll('.niche-card').forEach(function(c) {
+    c.classList.toggle('active', c.dataset.niche === key);
+  });
+  // Pre-fill form with niche defaults (keep brand name as-is)
+  var n = NICHES[key];
+  if (n) {
+    document.getElementById('bf-industry').value = n.examples.split(',')[0].trim();
+    document.getElementById('bf-audience').value = n.audience;
+    var toneEl = document.querySelector('input[name=tone][value="' + n.tone + '"]');
+    if (toneEl) toneEl.checked = true;
+    // Replace keywords with niche defaults if user hasn't customized
+    if (keywords.length <= 5) {
+      keywords = n.keywords.slice();
+      renderPills();
+    }
+  }
+  updatePlatRec();
+}
+
+function updatePlatRec() {
+  var rec = document.getElementById('plat-rec');
+  var badges = document.getElementById('plat-rec-badges');
+  if (!activeNiche || !NICHES[activeNiche]) { rec.style.display = 'none'; return; }
+  var plats = NICHES[activeNiche].platforms;
+  rec.style.display = 'flex';
+  badges.innerHTML = plats.map(function(p) {
+    return '<span class="plat-badge ' + p + '">' + platSymbol(p) + ' ' + PLAT_LABELS[p] + '</span>';
+  }).join('');
+}
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() { switchTab(btn.dataset.tab); });
+});
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
+  document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.toggle('active', p.id === 'tab-' + tab); });
+}
+
+// Brand form
+function loadBrandForm() {
+  if (!BRAND) return;
+  document.getElementById('bf-name').value = BRAND.name || '';
+  document.getElementById('bf-industry').value = BRAND.industry || '';
+  document.getElementById('bf-audience').value = BRAND.audience || '';
+  var toneEl = document.querySelector('input[name=tone][value="' + (BRAND.tone || 'casual') + '"]');
+  if (toneEl) toneEl.checked = true;
+  renderPills();
+}
+function updateGenMini() {
+  if (!BRAND) return;
+  document.getElementById('gen-brand-name').textContent = BRAND.name;
+  var nLabel = (activeNiche && NICHES[activeNiche]) ? NICHES[activeNiche].label + ' · ' : '';
+  document.getElementById('gen-brand-meta').textContent = nLabel + BRAND.industry + ' · ' + (BRAND.tone || 'casual') + ' tone';
+}
+document.getElementById('brand-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var data = {
+    name: document.getElementById('bf-name').value.trim(),
+    industry: document.getElementById('bf-industry').value.trim(),
+    tone: document.querySelector('input[name=tone]:checked').value,
+    audience: document.getElementById('bf-audience').value.trim(),
+    keywords: keywords,
+    niche: activeNiche,
+  };
+  fetch('/api/brand', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      BRAND = Object.assign({}, data);
+      updateGenMini();
+      var b = document.getElementById('brand-saved');
+      b.classList.add('visible');
+      setTimeout(function() { b.classList.remove('visible'); }, 3000);
+    });
+});
+
+// Keywords
+function renderPills() {
+  document.getElementById('kw-pills').innerHTML = keywords.map(function(kw, i) {
+    return '<div class="kw-pill">' + esc(kw) + '<button type="button" onclick="removeKw(' + i + ')">×</button></div>';
+  }).join('');
+}
+function addKeyword() {
+  var input = document.getElementById('kw-input');
+  var kw = input.value.trim();
+  if (kw && keywords.indexOf(kw) === -1 && keywords.length < 10) {
+    keywords.push(kw); renderPills(); input.value = '';
+  }
+}
+function removeKw(i) { keywords.splice(i, 1); renderPills(); }
+
+// Generate single
+function generatePosts() {
+  var topic = document.getElementById('topic').value.trim();
+  if (!topic) { document.getElementById('topic').focus(); return; }
+  var platforms = Array.from(document.querySelectorAll('input[name=platform]:checked')).map(function(cb) { return cb.value; });
+  if (!platforms.length) return;
+  var contentType = document.getElementById('content-type').value;
+  var btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Generating...';
+  var brandData = BRAND ? Object.assign({}, BRAND, {niche: activeNiche}) : {name:'Our Brand', industry:'business', tone:'casual', audience:'general', keywords:[], niche:''};
+  fetch('/api/generate', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({brand:brandData, platforms:platforms, topic:topic, content_type:contentType})})
+    .then(function(r) { return r.json(); })
+    .then(function(data) { showGenResults(data.results || {}, data.error, data.demo); })
+    .catch(function() { showGenResults({}, 'Request failed — try again.'); })
+    .finally(function() { btn.disabled = false; btn.textContent = 'Generate Posts'; });
+}
+function showGenResults(results, error, isDemo) {
+  var c = document.getElementById('gen-results');
+  var html = '';
+  if (error && !Object.keys(results).length) { c.innerHTML = '<div class="alert alert-info">' + esc(error) + '</div>'; return; }
+  if (isDemo) html += '<div class="alert alert-info">Demo mode — sample output. Add an Anthropic API key to generate real AI captions.</div>';
+  PLATFORMS.forEach(function(plat) {
+    if (!results[plat]) return;
+    var text = results[plat];
+    var over = plat === 'twitter' && text.length > 280;
+    html += '<div class="gen-card"><div class="gen-card-header ' + plat + '">';
+    html += '<span class="plat-badge ' + plat + '">' + platSymbol(plat) + '</span>';
+    html += '<span class="gen-platform-name">' + PLAT_LABELS[plat] + '</span>';
+    html += '<span class="gen-char-count' + (over ? ' over' : '') + '">' + text.length + (plat === 'twitter' ? ' / 280' : '') + ' chars</span>';
+    html += '</div><div class="gen-card-body"><div class="gen-caption">' + esc(text) + '</div>';
+    html += '<div class="gen-actions"><button class="btn btn-secondary btn-sm" onclick="copyText(' + JSON.stringify(text) + ',this)">Copy</button></div></div></div>';
+  });
+  c.innerHTML = html;
+}
+
+// Generate week
+function generateWeek() {
+  var btn = document.getElementById('gen-week-btn');
+  var status = document.getElementById('cal-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Generating...';
+  status.textContent = 'Generating 21 posts — takes about 15–30 seconds...';
+  var brandData = BRAND ? Object.assign({}, BRAND, {niche: activeNiche}) : {name:'Harbor Coffee Co.', industry:'specialty coffee shop', tone:'casual', audience:'coffee lovers', keywords:['coffee','local'], niche:'restaurant'};
+  fetch('/api/generate-week', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({brand:brandData})})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error && !data.posts) { status.textContent = 'Error: ' + data.error; return; }
+      POSTS = data.posts || [];
+      renderCalendar(POSTS);
+      status.textContent = data.demo ? 'Sample week loaded (demo mode). Add API key for live AI generation.' : 'Generated ' + POSTS.length + ' posts.';
+    })
+    .catch(function() { status.textContent = 'Request failed — try again.'; })
+    .finally(function() { btn.disabled = false; btn.textContent = 'Generate Week'; });
+}
+
+// Calendar
+function renderCalendar(posts) {
+  var lookup = {};
+  DAYS.forEach(function(d) { lookup[d] = {}; });
+  posts.forEach(function(p, i) {
+    var day = p.day;
+    if (!day && p.scheduled_date) {
+      var dt = new Date(p.scheduled_date + 'T12:00:00');
+      day = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dt.getDay()];
+    }
+    if (day && lookup[day]) lookup[day][p.platform] = i;
+  });
+  var html = '<div class="cal-cell cal-corner"></div>';
+  DAYS.forEach(function(d) { html += '<div class="cal-cell cal-day-header">' + d.slice(0,3) + '</div>'; });
+  PLATFORMS.forEach(function(plat) {
+    html += '<div class="cal-cell cal-plat-header ' + plat + '">' + PLAT_LABELS[plat] + '</div>';
+    DAYS.forEach(function(day) {
+      var idx = lookup[day][plat];
+      if (idx !== undefined) {
+        var p = posts[idx];
+        var ctype = p.content_type || 'general';
+        html += '<div class="cal-cell cal-post ' + plat + '" data-idx="' + idx + '">';
+        html += '<div class="cal-type">' + ctype + '</div>';
+        html += '<div class="cal-preview">' + esc((p.caption || '').slice(0, 110)) + '</div></div>';
+      } else {
+        html += '<div class="cal-cell cal-empty"></div>';
+      }
+    });
+  });
+  var grid = document.getElementById('cal-grid');
+  grid.innerHTML = html;
+  grid.querySelectorAll('.cal-post').forEach(function(cell) {
+    cell.addEventListener('click', function() { openModal(posts[+cell.dataset.idx], +cell.dataset.idx); });
+  });
+}
+
+// Modal
+var activeIdx = null;
+function openModal(post, idx) {
+  activeIdx = idx;
+  var ctype = post.content_type || 'general';
+  var html = '<div class="modal-header">';
+  html += '<span class="plat-badge ' + post.platform + '">' + platSymbol(post.platform) + '</span>';
+  html += '<strong>' + PLAT_LABELS[post.platform] + '</strong>';
+  html += '<span class="modal-day">&middot; ' + (post.day || '') + '</span>';
+  html += '<span class="modal-type-badge" style="background:' + (TYPE_COLORS[ctype]||'#f3f4f6') + ';color:' + (TYPE_TEXT[ctype]||'#374151') + '">' + ctype + '</span>';
+  html += '</div>';
+  html += '<div class="modal-caption">' + esc(post.caption || '') + '</div>';
+  html += '<div class="modal-footer">';
+  html += '<span class="modal-char">' + (post.caption || '').length + ' chars</span>';
+  if (post.id) {
+    html += '<select class="status-select" onchange="updateStatus(' + post.id + ',this.value)">';
+    html += '<option value="draft"' + (post.status==='draft'?' selected':'') + '>Draft</option>';
+    html += '<option value="approved"' + (post.status==='approved'?' selected':'') + '>Approved</option>';
+    html += '</select>';
+  }
+  html += '<button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="copyText(' + JSON.stringify(post.caption||'') + ',this)">Copy</button>';
+  html += '</div>';
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); activeIdx = null; }
+function handleModalBg(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+
+function updateStatus(id, status) {
+  fetch('/api/posts/' + id + '/status', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status:status})});
+  if (activeIdx !== null) { POSTS[activeIdx].status = status; renderCalendar(POSTS); }
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(function() {
+    var orig = btn.textContent; btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = orig; }, 2000);
+  });
+}
+
+function platSymbol(p) { return p === 'twitter' ? '𝕏' : p === 'instagram' ? 'IG' : 'in'; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
